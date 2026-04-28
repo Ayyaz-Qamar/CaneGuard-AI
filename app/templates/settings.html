@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>⚙️ {% if lang=='ur' %}ترتیبات{% else %}Settings{% endif %}</h1>
+  <p>{% if lang=='ur' %}CaneGuard AI کا تجربہ اپنی مرضی سے ترتیب دیں{% else %}Customize your CaneGuard AI experience{% endif %}</p>
+</div>
+
+<div class="settings-grid">
+
+  <!-- Profile Card -->
+  <div class="settings-card">
+    <div class="settings-card-title">👤 {% if lang=='ur' %}پروفائل{% else %}Profile{% endif %}</div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="position:relative;cursor:pointer" onclick="document.getElementById('settingsPicInput').click()">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(74,222,128,.35),rgba(74,222,128,.1));border:2px solid rgba(74,222,128,.4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:var(--accent2);overflow:hidden">
+          {% if current_user.profile_pic %}
+            <img src="{{ url_for('main.profile_pic', filename=current_user.profile_pic) }}" style="width:100%;height:100%;object-fit:cover">
+          {% else %}
+            {{ (current_user.full_name or current_user.username)[0]|upper }}
+          {% endif %}
+        </div>
+        <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--sidebar-bg);color:#052e0f">📷</div>
+        <input type="file" id="settingsPicInput" accept="image/*" style="display:none" onchange="uploadFromSettings(this)">
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--text)">{{ current_user.full_name or current_user.username }}</div>
+        <div style="font-size:11px;color:var(--muted)">@{{ current_user.username }}</div>
+        <div style="font-size:10px;color:var(--accent);margin-top:2px">Click photo to change</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{% if lang=='ur' %}پورا نام{% else %}Full Name{% endif %}</label>
+      <input class="form-input" id="fullNameInput" type="text"
+             value="{{ current_user.full_name or '' }}"
+             placeholder="{{ current_user.full_name or 'Enter full name' }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{% if lang=='ur' %}صارف نام{% else %}Username{% endif %}</label>
+      <input class="form-input" type="text" value="{{ current_user.username }}" disabled
+             style="opacity:.5;cursor:not-allowed">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveProfile()">
+      💾 {% if lang=='ur' %}پروفائل محفوظ کریں{% else %}Save Profile{% endif %}
+    </button>
+  </div>
+
+  <!-- Theme Card -->
+  <div class="settings-card">
+    <div class="settings-card-title">🎨 {% if lang=='ur' %}تھیم{% else %}Theme{% endif %}</div>
+
+    <div class="theme-option {% if session.get('theme') != 'light' %}selected{% endif %}"
+         onclick="selectTheme('dark')" id="darkThemeOpt">
+      <div class="theme-option-header">
+        <span class="theme-option-label">🌙 {% if lang=='ur' %}ڈارک تھیم{% else %}Dark Theme{% endif %}</span>
+        <div class="radio-circle {% if session.get('theme') != 'light' %}checked{% endif %}" id="darkRadio"></div>
+      </div>
+      <div style="background:#061208;border-radius:6px;height:34px;display:flex;align-items:center;padding:0 8px;gap:5px">
+        <div style="width:7px;height:7px;background:#4ade80;border-radius:50%"></div>
+        <div style="flex:1;height:3px;background:rgba(74,222,128,.2);border-radius:2px"></div>
+        <div style="width:20px;height:13px;background:rgba(74,222,128,.15);border-radius:3px"></div>
+        <div style="width:20px;height:13px;background:rgba(74,222,128,.1);border-radius:3px"></div>
+      </div>
+    </div>
+
+    <div class="theme-option {% if session.get('theme') == 'light' %}selected{% endif %}"
+         onclick="selectTheme('light')" id="lightThemeOpt">
+      <div class="theme-option-header">
+        <span class="theme-option-label">☀️ {% if lang=='ur' %}لائٹ تھیم{% else %}Light Theme{% endif %}</span>
+        <div class="radio-circle {% if session.get('theme') == 'light' %}checked{% endif %}" id="lightRadio"></div>
+      </div>
+      <div style="background:#f0fdf4;border-radius:6px;height:34px;display:flex;align-items:center;padding:0 8px;gap:5px">
+        <div style="width:7px;height:7px;background:#16a34a;border-radius:50%"></div>
+        <div style="flex:1;height:3px;background:#bbf7d0;border-radius:2px"></div>
+        <div style="width:20px;height:13px;background:#dcfce7;border-radius:3px"></div>
+        <div style="width:20px;height:13px;background:#bbf7d0;border-radius:3px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language Card -->
+  <div class="settings-card">
+    <div class="settings-card-title">🌐 {% if lang=='ur' %}زبان{% else %}Language{% endif %}</div>
+
+    <div onclick="pickLang('en')"
+      style="display:flex;align-items:center;justify-content:space-between;background:{% if lang=='en' %}rgba(74,222,128,.12){% else %}var(--row-bg){% endif %};border:1px solid {% if lang=='en' %}rgba(74,222,128,.3){% else %}var(--row-b){% endif %};border-radius:9px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .18s"
+      onmouseover="this.style.background='rgba(74,222,128,.1)'" onmouseout="this.style.background='{% if lang=='en' %}rgba(74,222,128,.12){% else %}var(--row-bg){% endif %}'">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:20px">🇬🇧</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">English</div>
+          <div style="font-size:10px;color:var(--muted)">English language</div>
+        </div>
+      </div>
+      <div class="radio-circle {% if lang=='en' %}checked{% endif %}"></div>
+    </div>
+
+    <div onclick="pickLang('ur')"
+      style="display:flex;align-items:center;justify-content:space-between;background:{% if lang=='ur' %}rgba(74,222,128,.12){% else %}var(--row-bg){% endif %};border:1px solid {% if lang=='ur' %}rgba(74,222,128,.3){% else %}var(--row-b){% endif %};border-radius:9px;padding:11px 13px;cursor:pointer;transition:all .18s"
+      onmouseover="this.style.background='rgba(74,222,128,.1)'" onmouseout="this.style.background='{% if lang=='ur' %}rgba(74,222,128,.12){% else %}var(--row-bg){% endif %}'">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:20px">🇵🇰</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">اردو</div>
+          <div style="font-size:10px;color:var(--muted)">Urdu language</div>
+        </div>
+      </div>
+      <div class="radio-circle {% if lang=='ur' %}checked{% endif %}"></div>
+    </div>
+  </div>
+
+  <!-- Location + About -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+
+    <!-- Location -->
+    <div class="settings-card">
+      <div class="settings-card-title">📍 {% if lang=='ur' %}جگہ{% else %}Location{% endif %}</div>
+      <div class="form-group" style="margin-bottom:8px">
+        <input class="form-input" id="citySettingInput" type="text"
+               value="{{ session.get('city', 'Rahim Yar Khan') }}"
+               placeholder="Enter city name">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="saveCity()">
+          💾 {% if lang=='ur' %}محفوظ کریں{% else %}Save{% endif %}
+        </button>
+        <button class="btn btn-sm" style="flex:1" onclick="detectLocationSettings()">
+          📡 {% if lang=='ur' %}خودکار{% else %}Auto GPS{% endif %}
+        </button>
+      </div>
+      <div id="locationSettingMsg" style="font-size:11px;color:var(--accent);margin-top:6px;min-height:16px"></div>
+    </div>
+
+    <!-- About -->
+    <div class="settings-card">
+      <div class="settings-card-title">ℹ️ {% if lang=='ur' %}کے بارے میں{% else %}About{% endif %}</div>
+      <div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:3px">CaneGuard AI</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Version 1.0 · FYP 2026</div>
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:2px">Ayyaz Qamar &amp; M.Hamza</div>
+      <div style="height:1px;background:var(--glass-b);margin-bottom:8px"></div>
+      <div style="font-size:10px;color:var(--muted)">
+        Automated Sugarcane Disease Detection System using AI/ML technology. Built with Flask, TensorFlow, and OpenCV.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Success Message -->
+<div id="settingsMsg" style="display:none;margin-top:14px"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function selectTheme(theme) {
+  document.body.classList.toggle("light-theme", theme === "light");
+  document.getElementById("darkThemeOpt").classList.toggle("selected",  theme === "dark");
+  document.getElementById("lightThemeOpt").classList.toggle("selected", theme === "light");
+  document.getElementById("darkRadio").classList.toggle("checked",  theme === "dark");
+  document.getElementById("lightRadio").classList.toggle("checked", theme === "light");
+  fetch("/set-theme",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({theme})});
+  const btn = document.getElementById("themeBtn");
+  if(btn) btn.textContent = theme === "light" ? "🌙" : "☀️";
+}
+
+function saveProfile() {
+  const name = document.getElementById("fullNameInput").value.trim();
+  if(!name) return;
+  fetch("/update-profile",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({full_name:name})})
+    .then(r=>r.json()).then(d=>{
+      showSettingsMsg(d.success ? "✅ Profile saved!" : "❌ Error saving profile", d.success);
+    });
+}
+
+function saveCity() {
+  const city = document.getElementById("citySettingInput").value.trim();
+  if(!city) return;
+  fetch("/set-city",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({city})})
+    .then(()=>{
+      document.getElementById("locationSettingMsg").textContent = "📍 " + city + " saved!";
+      const nc = document.getElementById("navCity");
+      if(nc) nc.textContent = city;
+    });
+}
+
+async function detectLocationSettings() {
+  document.getElementById("locationSettingMsg").textContent = "Detecting...";
+  const res  = await fetch("/detect-location");
+  const data = await res.json();
+  if(data.success) {
+    document.getElementById("citySettingInput").value = data.city;
+    document.getElementById("locationSettingMsg").textContent = "📍 " + data.display;
+    const nc = document.getElementById("navCity");
+    if(nc) nc.textContent = data.city;
+  } else {
+    document.getElementById("locationSettingMsg").textContent = "Could not detect location";
+  }
+}
+
+function uploadFromSettings(input) {
+  if(!input.files[0]) return;
+  const fd = new FormData();
+  fd.append("profile_pic", input.files[0]);
+  fetch("/upload-profile-pic",{method:"POST",body:fd})
+    .then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
+}
+
+function showSettingsMsg(msg, success) {
+  const el = document.getElementById("settingsMsg");
+  el.style.display = "block";
+  el.innerHTML = `<div class="alert alert-${success?'success':'error'}">${msg}</div>`;
+  setTimeout(()=>{ el.style.display="none"; }, 3000);
+}
+</script>
+{% endblock %}

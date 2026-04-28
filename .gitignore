@@ -1,0 +1,9 @@
+venv/
+uploads/
+reports/
+__pycache__/
+*.pyc
+*.db
+model/
+*.keras
+.env

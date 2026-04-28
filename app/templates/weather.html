@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Weather{% endblock %}
+{% block content %}
+<div class="main-content">
+
+  <div class="page-header">
+    <h1>🌤 {% if lang=='ur' %}موسم اور بیماری کا خطرہ{% else %}Weather & Disease Risk{% endif %}</h1>
+    <p>{% if lang=='ur' %}سات دن کا موسم اور بیماری کا خطرہ{% else %}7-day forecast and disease outbreak risk{% endif %}</p>
+  </div>
+
+  <form method="GET" action="{{ url_for('main.weather') }}"
+        style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center">
+    <input class="form-input" name="city" value="{{ city }}"
+           placeholder="Enter city..." style="max-width:250px;margin:0">
+    <button type="submit" class="btn btn-primary">
+      🔍 {% if lang=='ur' %}موسم لائیں{% else %}Get Forecast{% endif %}
+    </button>
+    <button type="button" class="btn" onclick="autoDetectWeather()">
+      📡 {% if lang=='ur' %}خودکار{% else %}Auto Detect{% endif %}
+    </button>
+  </form>
+
+  {% if weather.demo_mode %}
+  <div class="glass g-warn"
+       style="padding:11px 16px;margin-bottom:14px;font-size:13px">
+    ⚠ {% if lang=='ur' %}ڈیمو موسم — لائیو ڈیٹا کے لیے weather_module.py میں API key ڈالیں{% else %}Demo data — add your OpenWeatherMap API key in modules/weather_module.py{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="glass
+    {% if weather.overall_risk.level=='high' %}g-danger
+    {% elif weather.overall_risk.level=='medium' %}g-warn
+    {% else %}g-success{% endif %}"
+    style="padding:18px 22px;margin-bottom:18px;animation:fadeUp .4s ease both">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+         color:var(--muted);margin-bottom:5px">
+      {% if lang=='ur' %}مجموعی خطرہ{% else %}Overall Risk{% endif %}
+    </div>
+    <div style="font-size:1.35rem;font-weight:900;color:white;margin-bottom:3px">
+      {{ weather.overall_label }}
+    </div>
+    <div style="font-size:11px;color:var(--muted)">
+      📍 {{ weather.city }} &nbsp;·&nbsp; 🕐 {{ weather.fetched_at }}
+    </div>
+  </div>
+
+  <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+       color:var(--muted);margin-bottom:10px">
+    {% if lang=='ur' %}سات روزہ پیشگوئی{% else %}7-Day Forecast{% endif %}
+  </div>
+
+  {% for day in weather.forecast %}
+  <div class="glass weather-row"
+       style="animation:fadeUp .3s {{ loop.index0 * 0.05 }}s ease both">
+    <div class="weather-date">{{ day.date }}</div>
+    <span class="tag tag-gray">{{ day.condition }}</span>
+    <span class="tag tag-gray">🌡 {{ day.temp }}°C</span>
+    <span class="tag tag-gray">💧 {{ day.humidity }}%</span>
+    <span class="tag tag-gray">🌧 {{ day.rain }}mm</span>
+    <span class="tag
+      {% if day.risk=='high' %}tag-red
+      {% elif day.risk=='medium' %}tag-orange
+      {% else %}tag-green{% endif %}">
+      {{ day.risk_label_display }}
+    </span>
+  </div>
+  {% endfor %}
+
+  <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+       color:var(--muted);margin:22px 0 10px">
+    {% if lang=='ur' %}بیماری کے مطابق مشورہ{% else %}Disease-Specific Advice{% endif %}
+  </div>
+
+  {% set dis_colors = {
+    'redrot':           'var(--danger)',
+    'mosaic':           'var(--warn)',
+    'yellow':           'var(--gold)',
+    'rust':             '#a16207',
+    'bacterialblights': '#a78bfa'
+  } %}
+
+  {% for key, item in advices.items() %}
+  <div class="glass history-row"
+       style="animation:fadeUp .3s {{ loop.index0 * 0.07 }}s ease both;
+              border-left:3px solid {{ dis_colors.get(key, 'var(--accent)') }}">
+    <div class="history-info">
+      <div class="history-title"
+           style="color:{{ dis_colors.get(key, 'var(--accent)') }}">
+        {{ item.name }}
+      </div>
+      <div class="history-meta" style="font-size:12px;margin-top:3px">
+        {{ item.advice }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function autoDetectWeather(){
+  fetch("/detect-location")
+    .then(r => r.json())
+    .then(d => {
+      if(d.success)
+        window.location.href = `/weather?city=${encodeURIComponent(d.city)}`;
+      else
+        alert("Could not detect location — enter manually");
+    });
+}
+</script>
+{% endblock %}

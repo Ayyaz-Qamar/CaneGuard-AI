@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — CaneGuard AI</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<div class="auth-page">
+  <div class="auth-card glass">
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <div class="lang-switch">
+        <button class="lang-btn {% if lang=='en' %}active{% endif %}"
+                onclick="switchLang('en')">EN</button>
+        <button class="lang-btn {% if lang=='ur' %}active{% endif %}"
+                onclick="switchLang('ur')">اردو</button>
+      </div>
+    </div>
+
+    <span class="auth-logo">🌿</span>
+    <div class="auth-title shimmer-text">CaneGuard AI</div>
+    <div class="auth-sub">
+      {% if lang=='ur' %}اپنے اکاؤنٹ میں داخل ہوں{% else %}Sign in to your account{% endif %}
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ 'error' if cat=='error' else 'success' }}">
+      {% if msg=='invalid' %}
+        {% if lang=='ur' %}غلط صارف نام یا پاسورڈ{% else %}Invalid username or password{% endif %}
+      {% elif msg=='fill_all' %}
+        {% if lang=='ur' %}تمام خانے پُر کریں{% else %}Please fill all fields{% endif %}
+      {% elif msg=='registered' %}
+        {% if lang=='ur' %}اکاؤنٹ بن گیا — لاگ ان کریں{% else %}Account created — please login{% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <input type="hidden" name="lang" id="langVal" value="{{ lang }}">
+      <div class="form-group">
+        <label class="form-label">
+          {% if lang=='ur' %}صارف نام{% else %}Username{% endif %}
+        </label>
+        <input class="form-input" type="text" name="username"
+               placeholder="your_username" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          {% if lang=='ur' %}پاسورڈ{% else %}Password{% endif %}
+        </label>
+        <input class="form-input" type="password" name="password"
+               placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px;padding:12px">
+        {% if lang=='ur' %}لاگ ان{% else %}Login{% endif %}
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      {% if lang=='ur' %}
+        اکاؤنٹ نہیں ہے؟ <a href="{{ url_for('auth.register') }}">رجسٹر کریں</a>
+      {% else %}
+        Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<div class="created-by">Created by Ayyaz Qamar &amp; M.Hamza</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function switchLang(l) {
+  document.getElementById("langVal").value = l;
+  fetch("/set-lang",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({lang:l})
+  }).then(()=>location.reload());
+}
+</script>
+</body>
+</html>

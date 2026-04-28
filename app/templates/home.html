@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="dash-welcome">
+  <h1>CaneGuard AI</h1>
+  <p>{% if lang=='ur' %}خوش آمدید، {{ current_user.full_name or current_user.username }}!{% else %}Hello, Welcome Back {{ current_user.full_name or current_user.username }}!{% endif %}</p>
+</div>
+
+<div class="stats-grid">
+
+  <div class="stat-card" style="animation-delay:.05s">
+    <div class="stat-top">
+      <div class="stat-icon-box" style="background:rgba(74,222,128,.15)">📊</div>
+      <span class="stat-trend" style="color:var(--accent)">▲ 12%</span>
+    </div>
+    <div class="stat-number">{{ stats.total_scans }}</div>
+    <div class="stat-label">{% if lang=='ur' %}کل معائنے{% else %}Total Scans{% endif %}</div>
+    <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none">
+      <polyline points="0,22 13,18 26,20 39,12 52,14 65,8 80,5" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="stat-card" style="animation-delay:.1s">
+    <div class="stat-top">
+      <div class="stat-icon-box" style="background:rgba(248,113,113,.15)">🦠</div>
+      <span class="stat-trend" style="color:var(--danger)">▲ 8%</span>
+    </div>
+    <div class="stat-number">{{ diseased }}</div>
+    <div class="stat-label">{% if lang=='ur' %}بیماریاں ملیں{% else %}Diseases Found{% endif %}</div>
+    <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none">
+      <rect x="2"  y="16" width="8" height="12" fill="rgba(248,113,113,.5)" rx="2"/>
+      <rect x="14" y="10" width="8" height="18" fill="rgba(248,113,113,.5)" rx="2"/>
+      <rect x="26" y="14" width="8" height="14" fill="rgba(248,113,113,.5)" rx="2"/>
+      <rect x="38" y="6"  width="8" height="22" fill="var(--danger)" rx="2"/>
+      <rect x="50" y="12" width="8" height="16" fill="rgba(248,113,113,.5)" rx="2"/>
+      <rect x="62" y="4"  width="8" height="24" fill="var(--danger)" rx="2"/>
+    </svg>
+  </div>
+
+  <div class="stat-card" style="animation-delay:.15s">
+    <div class="stat-top">
+      <div class="stat-icon-box" style="background:rgba(74,222,128,.15)">✅</div>
+      <span class="stat-trend" style="color:var(--accent)">▲ 5%</span>
+    </div>
+    <div class="stat-number" id="healthyCount">0</div>
+    <div class="stat-label">{% if lang=='ur' %}صحت مند فصل{% else %}Healthy Crops{% endif %}</div>
+    <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none">
+      <polyline points="0,20 13,22 26,14 39,16 52,10 65,12 80,6" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="stat-card" style="animation-delay:.2s">
+    <div class="stat-top">
+      <div class="stat-icon-box" style="background:rgba(251,191,36,.15)">📈</div>
+      <span class="stat-trend" style="color:var(--gold)">▲ 3%</span>
+    </div>
+    <div class="stat-number">{{ stats.avg_damage }}%</div>
+    <div class="stat-label">{% if lang=='ur' %}اوسط نقصان{% else %}Avg Damage{% endif %}</div>
+    <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none">
+      <polyline points="0,24 13,20 26,22 39,16 52,18 65,10 80,12" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+</div>
+
+<div class="bottom-grid">
+
+  <div class="glass" style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:800;color:var(--text)">
+        {% if lang=='ur' %}حالیہ معائنے{% else %}Recent Scans{% endif %}
+      </div>
+      <a href="{{ url_for('main.history') }}"
+         style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);
+                border-radius:6px;padding:4px 10px;font-size:11px;
+                color:var(--accent);font-weight:700;text-decoration:none">
+        {% if lang=='ur' %}سب دیکھیں{% else %}View All{% endif %}
+      </a>
+    </div>
+    {% if recent_scans %}
+      {% for scan in recent_scans %}
+      <div style="display:flex;align-items:center;gap:9px;padding:8px 10px;
+                  background:var(--row-bg);border:1px solid var(--row-b);
+                  border-radius:9px;margin-bottom:6px">
+        <div style="width:32px;height:32px;border-radius:8px;
+                    background:rgba(74,222,128,.12);display:flex;
+                    align-items:center;justify-content:center;
+                    font-size:14px;flex-shrink:0">🍃</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:800;color:var(--text)">{{ scan.disease_label }}</div>
+          <div style="font-size:10px;color:var(--muted)">{{ scan.scan_date[:16] }} · {{ "%.1f"|format(scan.confidence) }}%</div>
+        </div>
+        <span class="tag {% if scan.severity=='Mild' %}tag-green{% elif scan.severity=='Severe' %}tag-red{% else %}tag-yellow{% endif %}">
+          {{ scan.severity }}
+        </span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">
+        {% if lang=='ur' %}ابھی کوئی معائنہ نہیں{% else %}No scans yet — upload a leaf image!{% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="glass" style="padding:16px">
+    <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">
+      {% if lang=='ur' %}بیماریوں کی تقسیم{% else %}Disease Distribution{% endif %}
+    </div>
+    {% set colors = {'redrot':'var(--danger)','healthy':'var(--accent)','mosaic':'var(--warn)','yellow':'var(--gold)','rust':'#a16207','bacterialblights':'#8b5cf6'} %}
+    {% if stats.by_disease %}
+      {% for item in stats.by_disease %}
+      {% set pct = ((item.cnt / stats.total_scans) * 100)|round(1) if stats.total_scans > 0 else 0 %}
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--text)">{{ item.disease_name|capitalize }}</span>
+          <span style="font-size:12px;font-weight:700;color:{{ colors.get(item.disease_name,'var(--accent)') }}">{{ pct }}%</span>
+        </div>
+        <div style="height:5px;background:var(--row-bg);border-radius:3px;overflow:hidden">
+          <div style="width:{{ pct }}%;height:100%;background:{{ colors.get(item.disease_name,'var(--accent)') }};border-radius:3px;transition:width .6s"></div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">
+        {% if lang=='ur' %}ابھی کوئی ڈیٹا نہیں{% else %}No data yet{% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<div style="display:flex;justify-content:flex-end;margin-top:16px;padding-bottom:10px">
+  <button onclick="confirmReset()"
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);
+                 color:#fca5a5;padding:9px 18px;border-radius:8px;cursor:pointer;
+                 font-size:13px;font-weight:700;font-family:inherit;
+                 display:flex;align-items:center;gap:8px">
+    🗑 {% if lang=='ur' %}سب ڈیٹا مٹائیں{% else %}Reset All Data{% endif %}
+  </button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const byDisease   = {{ stats.by_disease | tojson }};
+const healthyItem = byDisease.find(d => d.disease_name === "healthy");
+document.getElementById("healthyCount").textContent = healthyItem ? healthyItem.cnt : 0;
+
+async function confirmReset() {
+  const msg = "{% if lang=='ur' %}کیا آپ واقعی تمام ڈیٹا مٹانا چاہتے ہیں؟{% else %}Are you sure? This will delete ALL your scan history permanently!{% endif %}";
+  if (!confirm(msg)) return;
+  try {
+    const res  = await fetch("/reset-data", {method: "POST"});
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    }
+  } catch(e) {
+    alert("Error: " + e.message);
+  }
+}
+</script>
+{% endblock %}

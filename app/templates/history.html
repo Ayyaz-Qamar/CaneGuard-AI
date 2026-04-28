@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<div class="main-content">
+
+  <div class="page-header">
+    <h1>📋 {% if lang=='ur' %}بیماری کی تاریخ{% else %}Disease History{% endif %}</h1>
+    <p>{% if lang=='ur' %}آپ کے تمام پرانے معائنے{% else %}All your past scan records{% endif %}</p>
+  </div>
+
+  <div class="metrics-grid" style="margin-bottom:22px">
+    <div class="glass metric-card">
+      <div class="metric-label">{% if lang=='ur' %}کل معائنے{% else %}Total Scans{% endif %}</div>
+      <div class="metric-value">{{ stats.total_scans }}</div>
+    </div>
+    <div class="glass metric-card">
+      <div class="metric-label">{% if lang=='ur' %}اوسط نقصان{% else %}Avg Damage{% endif %}</div>
+      <div class="metric-value">{{ stats.avg_damage }}%</div>
+    </div>
+    <div class="glass metric-card">
+      <div class="metric-label">{% if lang=='ur' %}بیماریوں کی اقسام{% else %}Disease Types{% endif %}</div>
+      <div class="metric-value">{{ stats.by_disease|length }}</div>
+    </div>
+    <div class="glass metric-card">
+      <div class="metric-label">{% if lang=='ur' %}صحت مند{% else %}Healthy{% endif %}</div>
+      <div class="metric-value">
+        {% set h = namespace(v=0) %}
+        {% for r in stats.by_disease %}
+          {% if r.disease_name == 'healthy' %}{% set h.v = r.cnt %}{% endif %}
+        {% endfor %}
+        {{ h.v }}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">
+      {% if lang=='ur' %}چھانٹیں:{% else %}Filter:{% endif %}
+    </span>
+    {% for dis in ['all','healthy','redrot','mosaic','yellow','rust'] %}
+    <a href="{{ url_for('main.history') }}?filter={{ dis }}"
+       class="tag {% if filter_dis==dis %}tag-green{% else %}tag-gray{% endif %}"
+       style="text-decoration:none;cursor:pointer">
+      {{ dis|capitalize }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if not scans %}
+  <div class="glass" style="padding:36px;text-align:center;color:var(--muted)">
+    <div style="font-size:42px;margin-bottom:10px">📋</div>
+    <p>{% if lang=='ur' %}ابھی کوئی تاریخ نہیں{% else %}No history yet — upload a leaf image to get started{% endif %}</p>
+  </div>
+  {% else %}
+  {% for scan in scans %}
+  <div class="glass history-row"
+       style="animation:fadeUp .3s {{ loop.index0 * 0.04 }}s ease both">
+    <div class="history-info">
+      <div class="history-title">
+        #{{ scan.id }} &nbsp; {{ scan.disease_label }}
+        <span class="tag
+          {% if scan.severity=='Mild' %}tag-green
+          {% elif scan.severity=='Severe' %}tag-red
+          {% else %}tag-yellow{% endif %}"
+          style="margin-left:7px">{{ scan.severity }}</span>
+      </div>
+      <div class="history-meta">
+        🕐 {{ scan.scan_date }} &nbsp;·&nbsp;
+        {{ "%.1f"|format(scan.confidence) }}% &nbsp;·&nbsp;
+        {{ "%.1f"|format(scan.damage_pct) }}% damage &nbsp;·&nbsp;
+        {{ scan.input_type }} &nbsp;·&nbsp;
+        📍 {{ scan.city }}
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;flex-shrink:0">
+      <a href="{{ url_for('main.generate_pdf', scan_id=scan.id) }}"
+         class="btn btn-sm" title="Download PDF">📄</a>
+      <form method="POST"
+            action="{{ url_for('main.delete_scan', scan_id=scan.id) }}"
+            style="margin:0"
+            onsubmit="return confirm('Delete this scan?')">
+        <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+</div>
+{% endblock %}

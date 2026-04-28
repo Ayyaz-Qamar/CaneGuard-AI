@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Detect{% endblock %}
+{% block content %}
+<div class="main-content">
+
+  <div class="page-header">
+    <h1>📷 {% if lang=='ur' %}بیماری کی تشخیص{% else %}Disease Detection{% endif %}</h1>
+    <p>{% if lang=='ur' %}تصویر سے گنے کی بیماری فوری تشخیص کریں{% else %}Detect sugarcane disease from image instantly{% endif %}</p>
+  </div>
+
+  <div class="glass" style="padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:20px">📍</span>
+    <input class="form-input" id="cityInput" type="text" value="{{ city }}"
+           placeholder="Enter city..." style="max-width:200px;margin:0;padding:8px 12px">
+    <button class="btn btn-sm" id="detectLocBtn" onclick="detectLocation()">
+      🔍 {% if lang=='ur' %}خودکار{% else %}Auto Detect{% endif %}
+    </button>
+    <span id="locDisplay" style="font-size:12px;color:var(--accent)"></span>
+  </div>
+
+  <div class="tab-group">
+    <div class="tab-nav">
+      <button class="tab-btn active" data-target="imgTab">
+        🖼 {% if lang=='ur' %}تصویر{% else %}Image{% endif %}
+      </button>
+      <button class="tab-btn" data-target="vidTab">
+        🎥 {% if lang=='ur' %}ویڈیو{% else %}Video{% endif %}
+      </button>
+      <button class="tab-btn" data-target="camTab">
+        📹 {% if lang=='ur' %}کیمرہ{% else %}Webcam{% endif %}
+      </button>
+    </div>
+
+    <!-- Image Tab -->
+    <div class="tab-pane active" data-tab="imgTab">
+      <form id="detectForm" enctype="multipart/form-data">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <input type="hidden" id="cityHidden" name="city" value="{{ city }}">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <div>
+            <div class="upload-zone" id="imgZone">
+              <input type="file" id="imgInput" name="image" accept=".jpg,.jpeg,.png">
+              <div class="upload-icon">📤</div>
+              <div class="upload-text">
+                {% if lang=='ur' %}یہاں فائل ڈراپ کریں یا کلک کریں{% else %}Drag & drop or click to upload{% endif %}
+              </div>
+              <div class="upload-sub">
+                {% if lang=='ur' %}JPG، PNG قابل قبول{% else %}JPG, PNG supported{% endif %}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full"
+                    style="margin-top:14px;padding:13px">
+              🔍 {% if lang=='ur' %}تصویر جانچیں{% else %}Analyze Image{% endif %}
+            </button>
+          </div>
+
+          <div>
+            <div class="glass" style="padding:10px;border-radius:12px;height:100%;min-height:180px;
+                         display:flex;flex-direction:column;justify-content:center;align-items:center">
+              <div id="previewPlaceholder" style="text-align:center;color:var(--muted)">
+                <div style="font-size:40px;margin-bottom:10px">🖼</div>
+                <div style="font-size:13px">
+                  {% if lang=='ur' %}تصویر منتخب کریں{% else %}No image selected{% endif %}
+                </div>
+              </div>
+              <img id="imgPreviewEl"
+                   style="display:none;max-width:100%;max-height:220px;
+                          border-radius:8px;object-fit:contain">
+              <div id="imgMeta" style="display:none;margin-top:10px;
+                           display:none;gap:8px;width:100%">
+                <div class="glass" style="flex:1;padding:8px;text-align:center;border-radius:8px">
+                  <div style="font-size:11px;color:var(--muted)">
+                    {% if lang=='ur' %}نام{% else %}Name{% endif %}
+                  </div>
+                  <div id="imgName" style="font-size:12px;font-weight:700;
+                       overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+                </div>
+                <div class="glass" style="flex:1;padding:8px;text-align:center;border-radius:8px">
+                  <div style="font-size:11px;color:var(--muted)">
+                    {% if lang=='ur' %}سائز{% else %}Size{% endif %}
+                  </div>
+                  <div id="imgSize" style="font-size:12px;font-weight:700">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- Video Tab -->
+    <div class="tab-pane" data-tab="vidTab">
+      <div style="display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;padding:50px 20px;text-align:center">
+        <div style="width:70px;height:70px;background:rgba(255,255,255,0.06);
+                    border-radius:50%;display:flex;align-items:center;
+                    justify-content:center;font-size:30px;margin-bottom:16px">
+          🎥
+        </div>
+        <div style="display:inline-block;background:rgba(251,191,36,0.15);
+                    border:1px solid rgba(251,191,36,0.3);color:#fbbf24;
+                    font-size:11px;font-weight:700;letter-spacing:1px;
+                    padding:4px 12px;border-radius:100px;margin-bottom:14px">
+          VERSION 2.0
+        </div>
+        <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;color:var(--text)">
+          {% if lang=='ur' %}جلد آ رہا ہے{% else %}Coming Soon{% endif %}
+        </h3>
+        <p style="font-size:13px;color:var(--muted);max-width:320px;margin:0">
+          {% if lang=='ur' %}ویڈیو ڈیٹیکشن ورژن 2.0 میں دستیاب ہوگی{% else %}Video detection will be available in Version 2.0{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Webcam Tab -->
+    <div class="tab-pane" data-tab="camTab">
+      <div style="display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;padding:50px 20px;text-align:center">
+        <div style="width:70px;height:70px;background:rgba(255,255,255,0.06);
+                    border-radius:50%;display:flex;align-items:center;
+                    justify-content:center;font-size:30px;margin-bottom:16px">
+          📹
+        </div>
+        <div style="display:inline-block;background:rgba(251,191,36,0.15);
+                    border:1px solid rgba(251,191,36,0.3);color:#fbbf24;
+                    font-size:11px;font-weight:700;letter-spacing:1px;
+                    padding:4px 12px;border-radius:100px;margin-bottom:14px">
+          VERSION 2.0
+        </div>
+        <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;color:var(--text)">
+          {% if lang=='ur' %}جلد آ رہا ہے{% else %}Coming Soon{% endif %}
+        </h3>
+        <p style="font-size:13px;color:var(--muted);max-width:320px;margin:0">
+          {% if lang=='ur' %}ویب کیم ڈیٹیکشن ورژن 2.0 میں دستیاب ہوگی{% else %}Webcam detection will be available in Version 2.0{% endif %}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="resultSection" style="display:none;margin-top:26px"></div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById("imgInput").addEventListener("change", function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("previewPlaceholder").style.display = "none";
+    const img = document.getElementById("imgPreviewEl");
+    img.src = e.target.result;
+    img.style.display = "block";
+
+    const meta = document.getElementById("imgMeta");
+    meta.style.display = "flex";
+    document.getElementById("imgName").textContent = file.name;
+    document.getElementById("imgSize").textContent =
+      (file.size / 1024).toFixed(1) + " KB";
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("cityInput")?.addEventListener("input", function() {
+  const h = document.getElementById("cityHidden");
+  if (h) h.value = this.value;
+});
+</script>
+{% endblock %}

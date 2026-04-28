@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CaneGuard AI{% endblock %} — Sugarcane Disease Detection</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+</head>
+<body class="{{ 'light-theme' if session.get('theme')=='light' else '' }}">
+<canvas id="particles"></canvas>
+
+{% if current_user.is_authenticated %}
+
+<aside class="sidebar" id="sidebar">
+  <a href="{{ url_for('main.home') }}" class="sidebar-brand">
+    <div class="sidebar-brand-icon">🌿</div>
+    <div>
+      <div class="sidebar-brand-name">CaneGuard AI</div>
+      <div class="sidebar-brand-sub">Disease Detection</div>
+    </div>
+  </a>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-title">Main Menu</div>
+    <a href="{{ url_for('main.home') }}"
+       class="sidebar-link {% if request.endpoint=='main.home' %}active{% endif %}">
+      <span class="sidebar-icon">🏠</span> Dashboard
+    </a>
+    <a href="{{ url_for('main.detect') }}"
+       class="sidebar-link {% if request.endpoint=='main.detect' %}active{% endif %}">
+      <span class="sidebar-icon">📷</span> Detect
+    </a>
+    <a href="{{ url_for('main.weather') }}"
+       class="sidebar-link {% if request.endpoint=='main.weather' %}active{% endif %}">
+      <span class="sidebar-icon">🌤</span> Weather
+    </a>
+    <a href="{{ url_for('main.history') }}"
+       class="sidebar-link {% if request.endpoint=='main.history' %}active{% endif %}">
+      <span class="sidebar-icon">📋</span> History
+    </a>
+    <a href="{{ url_for('main.reports') }}"
+       class="sidebar-link {% if request.endpoint=='main.reports' %}active{% endif %}">
+      <span class="sidebar-icon">📄</span> Reports
+    </a>
+    <a href="{{ url_for('main.help_page') }}"
+       class="sidebar-link {% if request.endpoint=='main.help_page' %}active{% endif %}">
+      <span class="sidebar-icon">❓</span> Help
+    </a>
+    <div class="sidebar-section-title">Account</div>
+    <a href="{{ url_for('main.settings') }}"
+       class="sidebar-link {% if request.endpoint=='main.settings' %}active{% endif %}">
+      <span class="sidebar-icon">⚙️</span> Settings
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+      <span class="sidebar-icon">🚪</span> Logout
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-bottom-credit">
+      <div>👨‍💻 Developer: Ayyaz Qamar</div>
+      <div>👨‍💻 Co-Developer: M.Hamza</div>
+      <div>👨‍🏫 Supervised by: M.Waleed</div>
+      <div>🎓 FYP 2026</div>
+      <div>🔖 Version 1.0</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrap">
+
+  <nav class="topbar">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search disease, history..."
+             id="globalSearch" oninput="handleSearch(this.value)">
+    </div>
+
+    <div class="topbar-right">
+
+      <div class="nav-location" onclick="detectLocation()" title="Auto detect">
+        <span>📍</span>
+        <span id="navCity">{{ session.get('city', 'Rahim Yar Khan') }}</span>
+      </div>
+
+      <div style="position:relative" id="langWrap">
+        <button onclick="toggleLang()" class="topbar-btn"
+                style="width:auto;padding:0 10px;gap:4px;font-size:12px;font-weight:800;color:var(--accent)">
+          🌐 <span>{% if lang=='ur' %}اردو{% else %}EN{% endif %}</span>
+          <span style="font-size:9px;opacity:.6">▼</span>
+        </button>
+        <div class="lang-dropdown-menu" id="langDropdown">
+          <div onclick="pickLang('en')"
+            style="padding:8px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:{% if lang=='en' %}var(--accent){% else %}var(--text){% endif %}"
+            onmouseover="this.style.background='rgba(74,222,128,.1)'"
+            onmouseout="this.style.background='transparent'">
+            <span>🇬🇧 English</span>
+            {% if lang=='en' %}<span style="color:var(--accent)">✓</span>{% endif %}
+          </div>
+          <div onclick="pickLang('ur')"
+            style="padding:8px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:{% if lang=='ur' %}var(--accent){% else %}var(--text){% endif %}"
+            onmouseover="this.style.background='rgba(74,222,128,.1)'"
+            onmouseout="this.style.background='transparent'">
+            <span>🇵🇰 اردو</span>
+            {% if lang=='ur' %}<span style="color:var(--accent)">✓</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <button onclick="toggleTheme()" class="topbar-btn" id="themeBtn" title="Toggle Theme">
+        {% if session.get('theme')=='light' %}🌙{% else %}☀️{% endif %}
+      </button>
+
+      <a href="{{ url_for('main.history') }}" class="topbar-btn" title="History">🔔</a>
+
+      <div style="position:relative" id="profileWrap">
+        <div class="nav-profile" onclick="toggleProfile()" title="Profile">
+          {% if current_user.profile_pic %}
+            <img src="{{ url_for('main.profile_pic', filename=current_user.profile_pic) }}"
+                 style="width:100%;height:100%;object-fit:cover">
+          {% else %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="rgba(74,222,128,0.9)" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          {% endif %}
+        </div>
+
+        <div class="profile-dropdown-menu" id="profileDropdown">
+          <div style="display:flex;align-items:center;gap:11px;padding-bottom:11px;
+                      border-bottom:1px solid var(--glass-b)">
+            <div style="position:relative;cursor:pointer"
+                 onclick="document.getElementById('profilePicInput').click()">
+              <div style="width:50px;height:50px;border-radius:50%;
+                          background:linear-gradient(135deg,rgba(74,222,128,.35),rgba(74,222,128,.12));
+                          border:1.5px solid rgba(74,222,128,.4);display:flex;
+                          align-items:center;justify-content:center;font-size:18px;
+                          font-weight:900;color:#86efac;overflow:hidden">
+                {% if current_user.profile_pic %}
+                  <img src="{{ url_for('main.profile_pic', filename=current_user.profile_pic) }}"
+                       style="width:100%;height:100%;object-fit:cover">
+                {% else %}
+                  {{ (current_user.full_name or current_user.username)[0]|upper }}
+                {% endif %}
+              </div>
+              <div style="position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;
+                          border-radius:50%;background:var(--accent);display:flex;
+                          align-items:center;justify-content:center;font-size:9px;
+                          border:2px solid var(--sidebar-bg);color:#052e0f">📷</div>
+              <input type="file" id="profilePicInput" accept="image/*"
+                     style="display:none" onchange="uploadProfilePic(this)">
+            </div>
+            <div>
+              <div style="color:var(--text);font-weight:800;font-size:13px">
+                {{ current_user.full_name or current_user.username }}
+              </div>
+              <div style="color:var(--muted);font-size:11px">@{{ current_user.username }}</div>
+              <div style="color:var(--accent);font-size:9px;margin-top:1px">Click 📷 to change</div>
+            </div>
+          </div>
+          <div style="padding:9px 3px;font-size:12px">
+            <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--muted)">
+              <span>📍 Location</span>
+              <span style="color:var(--accent);font-weight:700">{{ session.get('city','Rahim Yar Khan') }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--muted)">
+              <span>🌐 Language</span>
+              <span style="color:var(--accent);font-weight:700">{% if lang=='ur' %}اردو{% else %}English{% endif %}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--muted)">
+              <span>🎨 Theme</span>
+              <span style="color:var(--accent);font-weight:700">{% if session.get('theme')=='light' %}Light{% else %}Dark{% endif %}</span>
+            </div>
+          </div>
+          <a href="{{ url_for('main.settings') }}"
+            style="display:block;margin-top:6px;padding:8px 11px;
+                   background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);
+                   border-radius:8px;color:var(--accent2);text-decoration:none;
+                   font-size:12px;font-weight:700;text-align:center">
+            ⚙️ Settings
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <div class="page-content">
+    {% block content %}{% endblock %}
+  </div>
+
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<div class="created-by">Created by Ayyaz Qamar &amp; M.Hamza</div>
+
+<div class="loader-overlay" id="loader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Analyzing...</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function toggleProfile() {
+  const dd=document.getElementById("profileDropdown");
+  if(dd) dd.style.display=dd.style.display==="block"?"none":"block";
+  const ld=document.getElementById("langDropdown");
+  if(ld) ld.style.display="none";
+}
+function toggleLang() {
+  const dd=document.getElementById("langDropdown");
+  if(dd) dd.style.display=dd.style.display==="block"?"none":"block";
+  const pd=document.getElementById("profileDropdown");
+  if(pd) pd.style.display="none";
+}
+function pickLang(l) {
+  fetch("/set-lang",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lang:l})})
+    .then(()=>location.reload());
+}
+function toggleTheme() {
+  const isLight=document.body.classList.toggle("light-theme");
+  fetch("/set-theme",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({theme:isLight?"light":"dark"})});
+  const btn=document.getElementById("themeBtn");
+  if(btn) btn.textContent=isLight?"🌙":"☀️";
+}
+function uploadProfilePic(input) {
+  if(!input.files[0]) return;
+  const fd=new FormData();
+  fd.append("profile_pic",input.files[0]);
+  fetch("/upload-profile-pic",{method:"POST",body:fd})
+    .then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
+}
+document.addEventListener("click",function(e){
+  const pw=document.getElementById("profileWrap");
+  const pd=document.getElementById("profileDropdown");
+  if(pw&&pd&&!pw.contains(e.target)) pd.style.display="none";
+  const lw=document.getElementById("langWrap");
+  const ld=document.getElementById("langDropdown");
+  if(lw&&ld&&!lw.contains(e.target)) ld.style.display="none";
+});
+function handleSearch(val) {
+  if(!val.trim()) return;
+  if(window.location.pathname!=="/history")
+    window.location.href=`/history?search=${encodeURIComponent(val)}`;
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

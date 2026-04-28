@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Help{% endblock %}
+{% block content %}
+<div class="main-content">
+
+  <div class="page-header">
+    <h1>❓ {% if lang=='ur' %}مدد مرکز{% else %}Help Center{% endif %}</h1>
+    <p>{% if lang=='ur' %}سسٹم کا استعمال اور بیماریوں کی رہنمائی{% else %}System guide and disease reference{% endif %}</p>
+  </div>
+
+  <div class="tab-group">
+    <div class="tab-nav">
+      <button class="tab-btn active" data-target="howTab">
+        {% if lang=='ur' %}استعمال{% else %}How to Use{% endif %}
+      </button>
+      <button class="tab-btn" data-target="disTab">
+        {% if lang=='ur' %}بیماریاں{% else %}Disease Guide{% endif %}
+      </button>
+      <button class="tab-btn" data-target="faqTab">FAQ</button>
+      <button class="tab-btn" data-target="contactTab">
+        {% if lang=='ur' %}رابطہ{% else %}Contact Us{% endif %}
+      </button>
+    </div>
+
+    <!-- How to Use -->
+    <div class="tab-pane active" data-tab="howTab">
+      {% set steps = [
+        ("1", "Upload Image / تصویر اپلوڈ کریں",
+         "Go to Detect and upload a clear sugarcane leaf photo. / تصویر سے تشخیص میں جائیں۔"),
+        ("2", "Set Location / جگہ ترتیب دیں",
+         "Enter city or use GPS auto-detect. / شہر لکھیں یا GPS استعمال کریں۔"),
+        ("3", "Analyze / جانچ کریں",
+         "Click Analyze — AI detects disease and damage. / جانچ بٹن دبائیں۔"),
+        ("4", "View Results / نتائج دیکھیں",
+         "See disease, damage %, severity, and full treatment. / بیماری، نقصان اور علاج دیکھیں۔"),
+        ("5", "Download Report / رپورٹ ڈاؤنلوڈ",
+         "Click Generate PDF Report to save results. / رپورٹ بنائیں کا بٹن دبائیں۔"),
+        ("6", "Check Weather / موسم",
+         "Monitor 7-day disease risk in Weather tab. / موسم والے حصے میں خطرہ دیکھیں۔"),
+        ("7", "View History / تاریخ",
+         "All scans auto-saved in Disease History. / تمام معائنے خودکار محفوظ ہوتے ہیں۔"),
+      ] %}
+      {% for num, title, desc in steps %}
+      <div class="glass"
+           style="padding:16px 20px;margin-bottom:9px;display:flex;gap:14px;
+                  align-items:flex-start;animation:fadeUp .3s {{ loop.index0 * 0.06 }}s ease both">
+        <div style="min-width:32px;height:32px;border-radius:50%;
+             background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.28);
+             display:flex;align-items:center;justify-content:center;
+             color:var(--accent);font-weight:900;font-size:13px;flex-shrink:0">
+          {{ num }}
+        </div>
+        <div>
+          <div style="font-weight:800;color:white;margin-bottom:3px;font-size:14px">
+            {{ title }}
+          </div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.5">
+            {{ desc }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Disease Guide -->
+    <div class="tab-pane" data-tab="disTab">
+      {% set dis_colors = {
+        'healthy':           'var(--accent)',
+        'bacterialblights':  '#a78bfa',
+        'redrot':            'var(--danger)',
+        'mosaic':            'var(--warn)',
+        'yellow':            'var(--gold)',
+        'rust':              '#a16207'
+      } %}
+      {% for key, dis in diseases.items() %}
+      <details class="glass"
+               style="margin-bottom:8px;
+                      border-left:3px solid {{ dis_colors.get(key, 'var(--accent)') }}">
+        <summary>
+          <span style="color:{{ dis_colors.get(key, 'var(--accent)') }};font-weight:800">
+            {{ dis.name }}
+          </span>
+          <span class="tag
+            {% if dis.risk=='high' %}tag-red
+            {% elif dis.risk=='medium' %}tag-yellow
+            {% else %}tag-green{% endif %}">
+            {{ dis.risk }}
+          </span>
+        </summary>
+        <div class="details-body">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+            {{ dis.desc }}
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:7px">
+                {% if lang=='ur' %}پھپھوندی کش{% else %}Fungicide{% endif %}
+              </div>
+              {% for i in dis.fungicide %}
+              <div class="treatment-item" style="font-size:12px;padding:3px 0">{{ i }}</div>
+              {% endfor %}
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:7px">
+                {% if lang=='ur' %}کھاد{% else %}Fertilizer{% endif %}
+              </div>
+              {% for i in dis.fertilizer %}
+              <div class="treatment-item" style="font-size:12px;padding:3px 0">{{ i }}</div>
+              {% endfor %}
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:7px">
+                {% if lang=='ur' %}احتیاط{% else %}Precautions{% endif %}
+              </div>
+              {% for i in dis.precautions %}
+              <div class="treatment-item" style="font-size:12px;padding:3px 0">{{ i }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+
+    <!-- FAQ -->
+    <div class="tab-pane" data-tab="faqTab">
+      {% set faqs = [
+        ("What image quality is needed? / کیسی تصویر چاہیے؟",
+         "Clear, well-lit close-up of the leaf. Natural light is best. / روشن اور صاف تصویر لیں۔"),
+        ("How accurate is detection? / تشخیص کتنی درست ہے؟",
+         "93%+ accuracy after training. / ٹریننگ کے بعد 93 فیصد سے زیادہ درست۔"),
+        ("Why demo weather? / ڈیمو موسم کیوں؟",
+         "Add free OpenWeatherMap API key in modules/weather_module.py. / weather_module.py میں API key ڈالیں۔"),
+        ("How many diseases detected? / کتنی بیماریاں پہچانتا ہے؟",
+         "6 classes: Healthy, Red Rot, Mosaic, Yellow Leaf, Rust, Bacterial Blights. / 6 اقسام۔"),
+        ("Where are reports saved? / رپورٹیں کہاں؟",
+         "In the reports/ folder. / پروجیکٹ کے reports/ فولڈر میں۔"),
+        ("How to delete history? / تاریخ کیسے مٹائیں؟",
+         "History tab → Delete button. / تاریخ میں جائیں اور مٹائیں دبائیں۔"),
+        ("How to reset all data? / سارا ڈیٹا کیسے مٹائیں؟",
+         "Dashboard → Reset All Data button. / ڈیش بورڈ پر Reset All Data دبائیں۔"),
+      ] %}
+      {% for q, a in faqs %}
+      <details class="glass" style="margin-bottom:7px">
+        <summary><span>{{ q }}</span><span></span></summary>
+        <div class="details-body" style="color:var(--muted);font-size:13px">{{ a }}</div>
+      </details>
+      {% endfor %}
+    </div>
+
+    <!-- Contact Us -->
+    <div class="tab-pane" data-tab="contactTab">
+      <div class="glass"
+           style="padding:32px 28px;text-align:center;animation:fadeUp .4s ease both">
+
+        <div style="font-size:52px;margin-bottom:14px;animation:float 3s ease-in-out infinite">
+          📬
+        </div>
+
+        <div style="font-size:1.3rem;font-weight:900;color:var(--accent2);margin-bottom:6px">
+          {% if lang=='ur' %}ہم سے رابطہ کریں{% else %}Contact Us{% endif %}
+        </div>
+
+        <div style="color:var(--muted);font-size:13px;margin-bottom:28px">
+          {% if lang=='ur' %}کوئی سوال یا مسئلہ ہو تو رابطہ کریں{% else %}Have a question or issue? Get in touch{% endif %}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;
+                    max-width:420px;margin:0 auto">
+
+          <div class="glass"
+               style="padding:18px 22px;display:flex;align-items:center;
+                      gap:16px;text-align:left;
+                      border-left:3px solid var(--accent)">
+            <div style="font-size:32px">👨‍💻</div>
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:4px">Developer</div>
+              <div style="color:white;font-weight:800;font-size:15px">
+                Ayyaz Qamar
+              </div>
+              <div>
+                <a href="mailto:ayyazqamar12@gmail.com"
+                   style="color:var(--accent2);font-weight:700;text-decoration:none">
+                  ayyazqamar12@gmail.com
+                </a>
+              </div>
+              <div>
+                <a href="tel:+923556931418"
+                   style="color:var(--accent2);font-weight:700;text-decoration:none">
+                  +92 355 6931418
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass"
+               style="padding:18px 22px;display:flex;align-items:center;
+                      gap:16px;text-align:left;
+                      border-left:3px solid #a78bfa">
+            <div style="font-size:32px">👨‍💻</div>
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:4px">Co-Developer</div>
+              <div style="color:white;font-weight:800;font-size:15px">
+                Muhammad Hamza
+              </div>
+              <div>
+                <a href="mailto:hafizmhamza45@gmail.com"
+                   style="color:var(--accent2);font-weight:700;text-decoration:none">
+                  hafizmhamza45@gmail.com
+                </a>
+              </div>
+              <div>
+                <a href="tel:+923220194335"
+                   style="color:var(--accent2);font-weight:700;text-decoration:none">
+                  +92 322 0194335
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass"
+               style="padding:18px 22px;display:flex;align-items:center;
+                      gap:16px;text-align:left;
+                      border-left:3px solid #64b5f6">
+            <div style="font-size:32px">🎓</div>
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--muted);margin-bottom:4px">Supervisor</div>
+              <div style="color:rgb(3, 113, 49);font-weight:800;font-size:15px">
+                M. Waleed
+              </div>
+              <div style="color:var(--muted);font-size:12px;margin-top:2px">
+                Dept. of Data Science & AI  KFUEIT
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="main-content">
+
+  <div class="page-header">
+    <h1>📄 {% if lang=='ur' %}رپورٹیں{% else %}Reports{% endif %}</h1>
+    <p>{% if lang=='ur' %}تمام بنی ہوئی PDF رپورٹیں{% else %}All generated PDF disease detection reports{% endif %}</p>
+  </div>
+
+  {% if not pdfs %}
+  <div class="glass" style="padding:48px;text-align:center;color:var(--muted)">
+    <div style="font-size:48px;margin-bottom:12px">📄</div>
+    <p style="margin-bottom:18px">
+      {% if lang=='ur' %}ابھی کوئی رپورٹ نہیں — تصویر جانچیں اور PDF بنائیں{% else %}No reports yet — analyze an image and click Generate PDF{% endif %}
+    </p>
+    <a href="{{ url_for('main.detect') }}" class="btn btn-primary"
+       style="display:inline-flex">
+      📷 {% if lang=='ur' %}تصویر جانچیں{% else %}Go to Detection{% endif %}
+    </a>
+  </div>
+
+  {% else %}
+  <div class="glass g-success"
+       style="padding:11px 16px;margin-bottom:14px;font-weight:700;font-size:13px">
+    ✓ {{ pdfs|length }}
+    {% if lang=='ur' %}رپورٹ موجود ہے{% else %}report(s) available{% endif %}
+  </div>
+
+  {% for pdf in pdfs %}
+  <div class="glass history-row"
+       style="animation:fadeUp .3s {{ loop.index0 * 0.05 }}s ease both">
+    <div class="history-info">
+      <div class="history-title">📄 {{ pdf.name }}</div>
+      <div class="history-meta">{{ pdf.size }} KB</div>
+    </div>
+    <a href="{{ url_for('main.download_report', filename=pdf.name) }}"
+       class="btn btn-primary btn-sm" style="flex-shrink:0">
+      ⬇ {% if lang=='ur' %}ڈاؤنلوڈ{% else %}Download{% endif %}
+    </a>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+</div>
+{% endblock %}
